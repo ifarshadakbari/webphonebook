@@ -53,11 +53,11 @@ class AuthController extends Controller
                 'port'     => $adDomain->port,
             ];
 
-            // LdapRecord v3/v4 handles SSL via protocol/TLS options rather than 'use_ssl' key
-            if ($adDomain->use_ssl) {
-                $config['use_tls'] = true; // Use TLS flag for ldaps connections internally in LdapRecord
-                // Often SSL implies port 636 but let's stick to their port and TLS boolean
-            } elseif ($adDomain->use_tls) {
+            // LdapRecord utilizes 'use_tls' for the `ldaps://` protocol (typically on port 636)
+            // and 'use_starttls' for `ldap://` (typically on port 389 with an upgrade).
+            // In our UI, `use_ssl` essentially maps to LdapRecord's `use_tls` configuration
+            // flag (which handles ldaps:// protocols). We pass 'use_tls' if either SSL or TLS is checked.
+            if ($adDomain->use_ssl || $adDomain->use_tls) {
                 $config['use_tls'] = true;
             }
 
