@@ -25,7 +25,8 @@ class ContactController extends Controller
 
             return DataTables::of($query)
                 ->addColumn('photo', function ($contact) {
-                    $url = $contact->photo ? asset('storage/photos/'.$contact->photo) : asset('assets/default-'.$contact->social_title.'.png');
+                    $defaultImage = $contact->social_title === 'خانم' ? 'default-female.png' : 'default-male.png';
+                    $url = $contact->photo ? asset('storage/photos/'.$contact->photo) : asset('assets/'.$defaultImage);
                     return '<img src="'.$url.'" class="contact-photo" alt="Photo">';
                 })
                 ->addColumn('full_name', function ($contact) {
