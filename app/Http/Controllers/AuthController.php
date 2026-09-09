@@ -44,15 +44,24 @@ class AuthController extends Controller
         }
 
         try {
-            $connection = new Connection([
+            // Build the configuration array dynamically based on LdapRecord constraints
+            $config = [
                 'hosts'    => explode(',', $adDomain->hosts),
                 'base_dn'  => $adDomain->base_dn,
                 'username' => $adDomain->username,
                 'password' => $adDomain->password,
                 'port'     => $adDomain->port,
-                'use_ssl'  => $adDomain->use_ssl,
-                'use_tls'  => $adDomain->use_tls,
-            ]);
+            ];
+
+            // LdapRecord v3/v4 handles SSL via protocol/TLS options rather than 'use_ssl' key
+            if ($adDomain->use_ssl) {
+                $config['use_tls'] = true; // Use TLS flag for ldaps connections internally in LdapRecord
+                // Often SSL implies port 636 but let's stick to their port and TLS boolean
+            } elseif ($adDomain->use_tls) {
+                $config['use_tls'] = true;
+            }
+
+            $connection = new Connection($config);
 
             Container::addConnection($connection, $adDomain->slug);
 
