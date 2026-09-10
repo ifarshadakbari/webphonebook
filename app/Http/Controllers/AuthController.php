@@ -91,7 +91,7 @@ class AuthController extends Controller
             // If we didn't find the user (no DN), we append the domain part derived from base_dn if needed.
             // If the admin uses domain 'parszarasa.local', base_dn is likely 'dc=parszarasa,dc=local'.
             // To be safe and simple, let's try the username first, and if it fails, try adding the UPN suffix.
-            $bindUsername = $ldapUser ? $ldapUser->getDn() : $username;
+            $bindUsername = ($ldapUser && method_exists($ldapUser, 'getDn')) ? $ldapUser->getDn() : $username;
 
             // Extract a domain from base_dn (e.g. dc=parszarasa,dc=local => parszarasa.local)
             $domainSuffix = '';
@@ -114,8 +114,8 @@ class AuthController extends Controller
 
             if ($authSuccess) {
                 // Successful AD authentication, create or update local user
-                $name = $ldapUser ? ($ldapUser->getFirstAttribute('cn') ?? $username) : $username;
-                $email = $ldapUser ? ($ldapUser->getFirstAttribute('mail') ?? null) : null;
+                $name = ($ldapUser && method_exists($ldapUser, 'getFirstAttribute')) ? ($ldapUser->getFirstAttribute('cn') ?? $username) : $username;
+                $email = ($ldapUser && method_exists($ldapUser, 'getFirstAttribute')) ? ($ldapUser->getFirstAttribute('mail') ?? null) : null;
 
                 $user = User::updateOrCreate(
                     ['username' => $username],
