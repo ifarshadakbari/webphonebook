@@ -96,13 +96,25 @@ class AdDomainController extends Controller
 
         try {
             $connection = new \LdapRecord\Connection($config);
-            // connect() will attempt to bind using the provided username and password
-            $connection->connect();
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'ارتباط با سرور Active Directory با موفقیت برقرار شد.'
-            ]);
+            $username = $request->username;
+            // If username doesn't contain a domain component, it might need one (like user@domain.local)
+            $domainSuffix = '';
+            if (preg_match_all('/dc=([^,]+)/i', $request->base_dn, $matches)) {
+                $domainSuffix = implode('.', $matches[1]);
+            }
+            $upn = $username . '@' . $domainSuffix;
+
+            // test connection by explicitly attempting auth bind
+            if ($connection->auth()->attempt($username, $request->password) || (!empty($domainSuffix) && $connection->auth()->attempt($upn, $request->password))) {
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'ارتباط با سرور Active Directory با موفقیت برقرار شد.'
+                ]);
+            }
+
+            throw new \Exception("ورود با اکانت معرفی شده رد شد.");
+
         } catch (\LdapRecord\Auth\BindException $e) {
             $error = $e->getDetailedError();
             $errorMessage = $error ? $error->getErrorMessage() : $e->getMessage();
