@@ -66,27 +66,36 @@ class AuthController extends Controller
             Container::addConnection($connection, $adDomain->slug);
 
             // Connect and authenticate the user
-            $connection->connect();
-
-            // Note: In real AD, you might need to append the domain name like user@domain.local
-            // It depends on the AD configuration. Often, just the username works if bind format is setup,
-            // or we might need to search for the user first.
-            // For simplicity, we assume we search the user by sAMAccountName
-
-            $ldapUser = $connection->query()->where('sAMAccountName', '=', $username)->first();
-
-            if (!$ldapUser) {
-                 return back()->withErrors(['username' => 'کاربر در Active Directory یافت نشد.']);
+            try {
+                $connection->connect();
+            } catch (\Exception $e) {
+                // Ignore initial bind errors, we will fallback to attempting to bind as the user
+                // Some AD setups do not allow anonymous binds or the service account is invalid.
             }
 
-            // Attempt bind with the user's distinguished name and provided password
-            if ($connection->auth()->attempt($ldapUser->getDn(), $password)) {
+            // If a service account is configured correctly, we search the user.
+            // If the search fails or the bind above fails, we'll try a direct bind with the provided username and password.
+            $ldapUser = null;
+            try {
+                $ldapUser = $connection->query()->where('sAMAccountName', '=', $username)->first();
+            } catch (\Exception $e) {}
+
+            $bindUsername = $ldapUser ? $ldapUser->getDn() : $username;
+
+            // If username doesn't contain a domain component, it might need one (like user@domain.local)
+            // depending on AD. LdapRecord auth()->attempt() tries to bind.
+
+            // Attempt bind with the user's distinguished name (or raw username) and provided password
+            if ($connection->auth()->attempt($bindUsername, $password)) {
                 // Successful AD authentication, create or update local user
+                $name = $ldapUser ? ($ldapUser->getFirstAttribute('cn') ?? $username) : $username;
+                $email = $ldapUser ? ($ldapUser->getFirstAttribute('mail') ?? null) : null;
+
                 $user = User::updateOrCreate(
                     ['username' => $username],
                     [
-                        'name' => $ldapUser->getFirstAttribute('cn') ?? $username,
-                        'email' => $ldapUser->getFirstAttribute('mail') ?? null,
+                        'name' => $name,
+                        'email' => $email,
                         'password' => null, // Managed by AD
                     ]
                 );
@@ -95,7 +104,7 @@ class AuthController extends Controller
                 return redirect()->intended('/dashboard');
             }
 
-            return back()->withErrors(['password' => 'رمز عبور Active Directory اشتباه است.']);
+            return back()->withErrors(['password' => 'ورود ناموفق. نام کاربری یا رمز عبور Active Directory اشتباه است یا ارتباط برقرار نشد.']);
 
         } catch (\Exception $e) {
             return back()->withErrors(['domain' => 'خطا در ارتباط با سرور Active Directory: ' . $e->getMessage()]);
