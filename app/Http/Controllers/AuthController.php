@@ -100,8 +100,19 @@ class AuthController extends Controller
             }
             $upn = $username . '@' . $domainSuffix;
 
-            // Try binding. If the DN/username fails, fallback to UPN format
-            if ($connection->auth()->attempt($bindUsername, $password) || (!empty($domainSuffix) && $connection->auth()->attempt($upn, $password))) {
+            // First try pure username (which some ADs accept if default domain is configured),
+            // if not try UPN, if not try DN if we have it.
+            $authSuccess = false;
+
+            if (!empty($domainSuffix) && $connection->auth()->attempt($upn, $password)) {
+                $authSuccess = true;
+            } elseif ($connection->auth()->attempt($username, $password)) {
+                $authSuccess = true;
+            } elseif ($bindUsername !== $username && $connection->auth()->attempt($bindUsername, $password)) {
+                $authSuccess = true;
+            }
+
+            if ($authSuccess) {
                 // Successful AD authentication, create or update local user
                 $name = $ldapUser ? ($ldapUser->getFirstAttribute('cn') ?? $username) : $username;
                 $email = $ldapUser ? ($ldapUser->getFirstAttribute('mail') ?? null) : null;

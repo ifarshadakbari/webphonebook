@@ -106,7 +106,10 @@ class AdDomainController extends Controller
             $upn = $username . '@' . $domainSuffix;
 
             // test connection by explicitly attempting auth bind
-            if ($connection->auth()->attempt($username, $request->password) || (!empty($domainSuffix) && $connection->auth()->attempt($upn, $request->password))) {
+            if (
+                (!empty($domainSuffix) && $connection->auth()->attempt($upn, $request->password)) ||
+                $connection->auth()->attempt($username, $request->password)
+            ) {
                 return response()->json([
                     'status' => 'success',
                     'message' => 'ارتباط با سرور Active Directory با موفقیت برقرار شد.'
