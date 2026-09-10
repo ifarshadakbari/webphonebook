@@ -47,11 +47,11 @@
                     </div>
 
                     <hr>
-                    <h6>شماره تلفن‌های ثابت و داخلی</h6>
+                    <h6>شماره تلفن‌های ثابت و داخلی (حداقل یک شماره ثابت یا موبایل الزامی است)</h6>
                     <div id="phones-container">
                         <div class="row mb-2 phone-row">
                             <div class="col-md-5">
-                                <input type="text" name="phones[0][number]" class="form-control text-end" dir="ltr" placeholder="شماره ثابت" required>
+                                <input type="text" name="phones[0][number]" class="form-control text-end" dir="ltr" placeholder="شماره ثابت">
                             </div>
                             <div class="col-md-5">
                                 <input type="text" name="phones[0][internal]" class="form-control text-end" dir="ltr" placeholder="داخلی (اختیاری)">
@@ -99,7 +99,7 @@
                     $('#phones-container').html(`
                         <div class="row mb-2 phone-row">
                             <div class="col-md-5">
-                                <input type="text" name="phones[0][number]" class="form-control text-end" dir="ltr" placeholder="شماره ثابت" required>
+                                <input type="text" name="phones[0][number]" class="form-control text-end" dir="ltr" placeholder="شماره ثابت">
                             </div>
                             <div class="col-md-5">
                                 <input type="text" name="phones[0][internal]" class="form-control text-end" dir="ltr" placeholder="داخلی (اختیاری)">
@@ -136,7 +136,7 @@
             let row = `
                 <div class="row mb-2 phone-row">
                     <div class="col-md-5">
-                        <input type="text" name="phones[${phoneIndex}][number]" class="form-control text-end" dir="ltr" placeholder="شماره ثابت" required>
+                        <input type="text" name="phones[${phoneIndex}][number]" class="form-control text-end" dir="ltr" placeholder="شماره ثابت">
                     </div>
                     <div class="col-md-5">
                         <input type="text" name="phones[${phoneIndex}][internal]" class="form-control text-end" dir="ltr" placeholder="داخلی (اختیاری)">

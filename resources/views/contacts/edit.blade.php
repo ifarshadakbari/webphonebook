@@ -52,13 +52,13 @@
                     </div>
 
                     <hr>
-                    <h6>شماره تلفن‌های ثابت و داخلی</h6>
+                    <h6>شماره تلفن‌های ثابت و داخلی (حداقل یک شماره ثابت یا موبایل الزامی است)</h6>
                     <div id="phones-container">
                         @if($contact->phones->count() > 0)
                             @foreach($contact->phones as $index => $phone)
                             <div class="row mb-2 phone-row">
                                 <div class="col-md-5">
-                                    <input type="text" name="phones[{{ $index }}][number]" class="form-control text-end" dir="ltr" value="{{ $phone->phone_number }}" required>
+                                    <input type="text" name="phones[{{ $index }}][number]" class="form-control text-end" dir="ltr" value="{{ $phone->phone_number }}">
                                 </div>
                                 <div class="col-md-5">
                                     <input type="text" name="phones[{{ $index }}][internal]" class="form-control text-end" dir="ltr" value="{{ $phone->internal_number }}">
@@ -71,7 +71,7 @@
                         @else
                             <div class="row mb-2 phone-row">
                                 <div class="col-md-5">
-                                    <input type="text" name="phones[0][number]" class="form-control text-end" dir="ltr" placeholder="شماره ثابت" required>
+                                    <input type="text" name="phones[0][number]" class="form-control text-end" dir="ltr" placeholder="شماره ثابت">
                                 </div>
                                 <div class="col-md-5">
                                     <input type="text" name="phones[0][internal]" class="form-control text-end" dir="ltr" placeholder="داخلی (اختیاری)">
@@ -141,7 +141,7 @@
             let row = `
                 <div class="row mb-2 phone-row">
                     <div class="col-md-5">
-                        <input type="text" name="phones[${phoneIndex}][number]" class="form-control text-end" dir="ltr" placeholder="شماره ثابت" required>
+                        <input type="text" name="phones[${phoneIndex}][number]" class="form-control text-end" dir="ltr" placeholder="شماره ثابت">
                     </div>
                     <div class="col-md-5">
                         <input type="text" name="phones[${phoneIndex}][internal]" class="form-control text-end" dir="ltr" placeholder="داخلی (اختیاری)">

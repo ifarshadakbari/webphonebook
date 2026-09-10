@@ -82,10 +82,28 @@ class ContactController extends Controller
             'last_name' => 'required|string|max:255',
             'mobile' => 'nullable|string|max:20',
             'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'phones' => 'array',
-            'phones.*.number' => 'required_with:phones|string',
+            'phones' => 'nullable|array',
+            'phones.*.number' => 'nullable|string',
             'phones.*.internal' => 'nullable|string',
         ]);
+
+        // Require at least one phone number (mobile or landline)
+        $hasMobile = !empty($request->mobile);
+        $hasLandline = false;
+        if ($request->has('phones')) {
+            foreach ($request->phones as $phone) {
+                if (!empty($phone['number'])) {
+                    $hasLandline = true;
+                    break;
+                }
+            }
+        }
+
+        if (!$hasMobile && !$hasLandline) {
+            return response()->json([
+                'errors' => ['mobile' => ['لطفاً حداقل یک شماره تلفن همراه یا ثابت وارد کنید.']]
+            ], 422);
+        }
 
         $photoName = null;
         if ($request->hasFile('photo')) {
@@ -156,10 +174,28 @@ class ContactController extends Controller
             'last_name' => 'required|string|max:255',
             'mobile' => 'nullable|string|max:20',
             'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'phones' => 'array',
-            'phones.*.number' => 'required_with:phones|string',
+            'phones' => 'nullable|array',
+            'phones.*.number' => 'nullable|string',
             'phones.*.internal' => 'nullable|string',
         ]);
+
+        // Require at least one phone number (mobile or landline)
+        $hasMobile = !empty($request->mobile);
+        $hasLandline = false;
+        if ($request->has('phones')) {
+            foreach ($request->phones as $phone) {
+                if (!empty($phone['number'])) {
+                    $hasLandline = true;
+                    break;
+                }
+            }
+        }
+
+        if (!$hasMobile && !$hasLandline) {
+            return response()->json([
+                'errors' => ['mobile' => ['لطفاً حداقل یک شماره تلفن همراه یا ثابت وارد کنید.']]
+            ], 422);
+        }
 
         $photoName = $contact->photo;
         if ($request->hasFile('photo')) {
