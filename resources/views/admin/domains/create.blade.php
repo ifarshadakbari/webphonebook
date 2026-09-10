@@ -59,10 +59,45 @@
                         </div>
                     </div>
                     <button type="submit" class="btn btn-primary">ذخیره</button>
+                    <button type="button" class="btn btn-info text-white" id="test-connection-btn">تست ارتباط</button>
                     <a href="{{ route('admin.domains.index') }}" class="btn btn-secondary">انصراف</a>
                 </form>
+                <div id="test-result" class="mt-3"></div>
             </div>
         </div>
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        $('#test-connection-btn').click(function() {
+            let btn = $(this);
+            let form = btn.closest('form');
+            let resultDiv = $('#test-result');
+
+            btn.prop('disabled', true).text('در حال تست...');
+            resultDiv.html('');
+
+            $.ajax({
+                url: "{{ route('admin.domains.test') }}",
+                type: 'POST',
+                data: form.serialize(),
+                success: function(response) {
+                    resultDiv.html('<div class="alert alert-success">' + response.message + '</div>');
+                    btn.prop('disabled', false).text('تست ارتباط');
+                },
+                error: function(xhr) {
+                    let msg = 'خطایی رخ داد.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        msg = xhr.responseJSON.message;
+                    }
+                    resultDiv.html('<div class="alert alert-danger">' + msg + '</div>');
+                    btn.prop('disabled', false).text('تست ارتباط');
+                }
+            });
+        });
+    });
+</script>
+@endpush

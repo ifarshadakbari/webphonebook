@@ -71,4 +71,62 @@ class AdDomainController extends Controller
         $domain->delete();
         return redirect()->route('admin.domains.index')->with('success', 'دامین حذف شد.');
     }
+
+    public function testConnection(Request $request)
+    {
+        $request->validate([
+            'hosts' => 'required|string',
+            'base_dn' => 'required|string',
+            'username' => 'required|string',
+            'port' => 'required|integer',
+        ]);
+
+        $config = [
+            'hosts'    => explode(',', $request->hosts),
+            'base_dn'  => $request->base_dn,
+            'username' => $request->username,
+            'password' => $request->password ?? '',
+            'port'     => $request->port,
+            'timeout'  => 5,
+        ];
+
+        if ($request->use_ssl || $request->use_tls) {
+            $config['use_tls'] = true;
+        }
+
+        try {
+            $connection = new \LdapRecord\Connection($config);
+
+            $username = $request->username;
+            // If username doesn't contain a domain component, it might need one (like user@domain.local)
+            $domainSuffix = '';
+            if (preg_match_all('/dc=([^,]+)/i', $request->base_dn, $matches)) {
+                $domainSuffix = implode('.', $matches[1]);
+            }
+            $upn = $username . '@' . $domainSuffix;
+
+            // test connection by explicitly attempting auth bind
+            if ($connection->auth()->attempt($username, $request->password) || (!empty($domainSuffix) && $connection->auth()->attempt($upn, $request->password))) {
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'ارتباط با سرور Active Directory با موفقیت برقرار شد.'
+                ]);
+            }
+
+            throw new \Exception("ورود با اکانت معرفی شده رد شد.");
+
+        } catch (\LdapRecord\Auth\BindException $e) {
+            $error = $e->getDetailedError();
+            $errorMessage = $error ? $error->getErrorMessage() : $e->getMessage();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'ارتباط برقرار شد اما احراز هویت ناموفق بود: ' . $errorMessage
+            ], 400);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'خطا در برقراری ارتباط: ' . $e->getMessage()
+            ], 400);
+        }
+    }
 }

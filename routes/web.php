@@ -7,7 +7,10 @@ use App\Http\Controllers\AdDomainController;
 use App\Http\Controllers\ContactController;
 
 Route::get('/', function () {
-    return redirect('/dashboard');
+    if (auth()->check()) {
+        return redirect()->route('contacts.index');
+    }
+    return redirect('/login');
 });
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -19,6 +22,7 @@ Route::middleware('auth')->group(function () {
 
     // Admin routes
     Route::middleware('admin')->prefix('admin')->name('admin.')->group(function() {
+        Route::post('domains/test', [AdDomainController::class, 'testConnection'])->name('domains.test');
         Route::resource('domains', AdDomainController::class);
     });
 

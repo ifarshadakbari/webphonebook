@@ -60,10 +60,54 @@
                         </div>
                     </div>
                     <button type="submit" class="btn btn-primary">بروزرسانی</button>
+                    <button type="button" class="btn btn-info text-white" id="test-connection-btn">تست ارتباط</button>
                     <a href="{{ route('admin.domains.index') }}" class="btn btn-secondary">انصراف</a>
                 </form>
+                <div id="test-result" class="mt-3"></div>
             </div>
         </div>
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        $('#test-connection-btn').click(function() {
+            let btn = $(this);
+            let form = btn.closest('form');
+            let resultDiv = $('#test-result');
+
+            btn.prop('disabled', true).text('در حال تست...');
+            resultDiv.html('');
+
+            // For PUT forms we need to trick the data a bit, but serialize includes the _method=PUT.
+            // the route is POST, so we can temporarily strip _method or let backend handle it if it doesn't enforce PUT.
+            // Wait, if it's sending _method=PUT to a POST endpoint Laravel will block it or redirect.
+            // Let's create a custom payload or just remove _method for this ajax call
+            let formData = form.serializeArray();
+            let data = $.param(formData.filter(function(i) {
+                return i.name !== '_method';
+            }));
+
+            $.ajax({
+                url: "{{ route('admin.domains.test') }}",
+                type: 'POST',
+                data: data,
+                success: function(response) {
+                    resultDiv.html('<div class="alert alert-success">' + response.message + '</div>');
+                    btn.prop('disabled', false).text('تست ارتباط');
+                },
+                error: function(xhr) {
+                    let msg = 'خطایی رخ داد.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        msg = xhr.responseJSON.message;
+                    }
+                    resultDiv.html('<div class="alert alert-danger">' + msg + '</div>');
+                    btn.prop('disabled', false).text('تست ارتباط');
+                }
+            });
+        });
+    });
+</script>
+@endpush

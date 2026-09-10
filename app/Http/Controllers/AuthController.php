@@ -26,13 +26,20 @@ class AuthController extends Controller
         ]);
 
         $username = $request->input('username');
+
+        // Ensure username is clean of backslash syntax like "domain\username" if user provided it
+        if (strpos($username, '\\') !== false) {
+            $parts = explode('\\', $username);
+            $username = end($parts);
+        }
+
         $password = $request->input('password');
         $domainId = $request->input('domain');
 
         // Local Admin login (fallback)
         if (empty($domainId) || $domainId === 'local') {
             if (Auth::attempt(['username' => $username, 'password' => $password])) {
-                return redirect()->intended('/dashboard');
+                return redirect()->intended(route('contacts.index'));
             }
             return back()->withErrors(['username' => 'نام کاربری یا رمز عبور اشتباه است (لاگین محلی).']);
         }
@@ -80,13 +87,21 @@ class AuthController extends Controller
                 $ldapUser = $connection->query()->where('sAMAccountName', '=', $username)->first();
             } catch (\Exception $e) {}
 
+            // Most AD servers require the UPN (username@domain.com) or DOMAIN\username to bind if not using a DN.
+            // If we didn't find the user (no DN), we append the domain part derived from base_dn if needed.
+            // If the admin uses domain 'parszarasa.local', base_dn is likely 'dc=parszarasa,dc=local'.
+            // To be safe and simple, let's try the username first, and if it fails, try adding the UPN suffix.
             $bindUsername = $ldapUser ? $ldapUser->getDn() : $username;
 
-            // If username doesn't contain a domain component, it might need one (like user@domain.local)
-            // depending on AD. LdapRecord auth()->attempt() tries to bind.
+            // Extract a domain from base_dn (e.g. dc=parszarasa,dc=local => parszarasa.local)
+            $domainSuffix = '';
+            if (preg_match_all('/dc=([^,]+)/i', $adDomain->base_dn, $matches)) {
+                $domainSuffix = implode('.', $matches[1]);
+            }
+            $upn = $username . '@' . $domainSuffix;
 
-            // Attempt bind with the user's distinguished name (or raw username) and provided password
-            if ($connection->auth()->attempt($bindUsername, $password)) {
+            // Try binding. If the DN/username fails, fallback to UPN format
+            if ($connection->auth()->attempt($bindUsername, $password) || (!empty($domainSuffix) && $connection->auth()->attempt($upn, $password))) {
                 // Successful AD authentication, create or update local user
                 $name = $ldapUser ? ($ldapUser->getFirstAttribute('cn') ?? $username) : $username;
                 $email = $ldapUser ? ($ldapUser->getFirstAttribute('mail') ?? null) : null;
@@ -101,7 +116,7 @@ class AuthController extends Controller
                 );
 
                 Auth::login($user);
-                return redirect()->intended('/dashboard');
+                return redirect()->intended(route('contacts.index'));
             }
 
             return back()->withErrors(['password' => 'ورود ناموفق. نام کاربری یا رمز عبور Active Directory اشتباه است یا ارتباط برقرار نشد.']);
