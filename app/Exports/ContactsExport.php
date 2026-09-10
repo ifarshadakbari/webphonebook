@@ -59,7 +59,7 @@ class ContactsExport extends DefaultValueBinder implements FromQuery, WithHeadin
         ];
     }
 
-    public function bindValue(Cell $cell, $value)
+    public function bindValue(Cell $cell, mixed $value): bool
     {
         if (is_numeric($value)) {
             $cell->setValueExplicit($value, DataType::TYPE_STRING);
