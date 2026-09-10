@@ -71,4 +71,50 @@ class AdDomainController extends Controller
         $domain->delete();
         return redirect()->route('admin.domains.index')->with('success', 'دامین حذف شد.');
     }
+
+    public function testConnection(Request $request)
+    {
+        $request->validate([
+            'hosts' => 'required|string',
+            'base_dn' => 'required|string',
+            'username' => 'required|string',
+            'port' => 'required|integer',
+        ]);
+
+        $config = [
+            'hosts'    => explode(',', $request->hosts),
+            'base_dn'  => $request->base_dn,
+            'username' => $request->username,
+            'password' => $request->password ?? '',
+            'port'     => $request->port,
+            'timeout'  => 5,
+        ];
+
+        if ($request->use_ssl || $request->use_tls) {
+            $config['use_tls'] = true;
+        }
+
+        try {
+            $connection = new \LdapRecord\Connection($config);
+            // connect() will attempt to bind using the provided username and password
+            $connection->connect();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'ارتباط با سرور Active Directory با موفقیت برقرار شد.'
+            ]);
+        } catch (\LdapRecord\Auth\BindException $e) {
+            $error = $e->getDetailedError();
+            $errorMessage = $error ? $error->getErrorMessage() : $e->getMessage();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'ارتباط برقرار شد اما احراز هویت ناموفق بود: ' . $errorMessage
+            ], 400);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'خطا در برقراری ارتباط: ' . $e->getMessage()
+            ], 400);
+        }
+    }
 }
