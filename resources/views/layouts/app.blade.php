@@ -19,8 +19,11 @@
             --secondary-color: #C53678; /* red-violet */
             --bg-light: #FFFFFF;
         }
+        * {
+            font-family: 'Vazirmatn', sans-serif !important;
+        }
         body {
-            font-family: 'Vazirmatn', sans-serif;
+            font-family: 'Vazirmatn', sans-serif !important;
             background-color: #f4f6f9;
         }
         .navbar-custom {
@@ -69,6 +72,18 @@
         }
         .text-primary {
             color: var(--primary-color) !important;
+        }
+        .bg-primary {
+            background-color: var(--primary-color) !important;
+        }
+        .btn-info {
+            background-color: #555555 !important; /* dark gray */
+            border-color: #555555 !important;
+            color: #fff !important;
+        }
+        .btn-info:hover {
+            background-color: #333333 !important;
+            border-color: #333333 !important;
         }
     </style>
     @stack('styles')
