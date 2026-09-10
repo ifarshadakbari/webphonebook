@@ -26,13 +26,20 @@ class AuthController extends Controller
         ]);
 
         $username = $request->input('username');
+
+        // Ensure username is clean of backslash syntax like "domain\username" if user provided it
+        if (strpos($username, '\\') !== false) {
+            $parts = explode('\\', $username);
+            $username = end($parts);
+        }
+
         $password = $request->input('password');
         $domainId = $request->input('domain');
 
         // Local Admin login (fallback)
         if (empty($domainId) || $domainId === 'local') {
             if (Auth::attempt(['username' => $username, 'password' => $password])) {
-                return redirect()->intended('/dashboard');
+                return redirect()->intended(route('contacts.index'));
             }
             return back()->withErrors(['username' => 'نام کاربری یا رمز عبور اشتباه است (لاگین محلی).']);
         }
@@ -101,7 +108,7 @@ class AuthController extends Controller
                 );
 
                 Auth::login($user);
-                return redirect()->intended('/dashboard');
+                return redirect()->intended(route('contacts.index'));
             }
 
             return back()->withErrors(['password' => 'ورود ناموفق. نام کاربری یا رمز عبور Active Directory اشتباه است یا ارتباط برقرار نشد.']);

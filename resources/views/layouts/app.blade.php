@@ -14,15 +14,61 @@
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
 
     <style>
+        :root {
+            --primary-color: #FF5841; /* sunset orange */
+            --secondary-color: #C53678; /* red-violet */
+            --bg-light: #FFFFFF;
+        }
         body {
             font-family: 'Vazirmatn', sans-serif;
-            background-color: #f8f9fa;
+            background-color: #f4f6f9;
+        }
+        .navbar-custom {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .navbar-custom .navbar-brand, .navbar-custom .nav-link, .navbar-custom .text-white {
+            color: #FFFFFF !important;
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        .btn-primary:hover {
+            background-color: #e04b36;
+            border-color: #e04b36;
+        }
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        .btn-secondary:hover {
+            background-color: #a82c65;
+            border-color: #a82c65;
+        }
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        .card-header {
+            background-color: #fff;
+            border-bottom: 2px solid #f0f0f0;
+            border-radius: 12px 12px 0 0 !important;
         }
         .contact-photo {
             width: 60px;
             height: 60px;
             object-fit: cover;
             border-radius: 50%;
+            border: 2px solid var(--primary-color);
+        }
+        table.dataTable thead th {
+            background-color: #fafafa;
+            border-bottom: 2px solid #eaeaea;
+        }
+        .text-primary {
+            color: var(--primary-color) !important;
         }
     </style>
     @stack('styles')
@@ -30,7 +76,7 @@
 <body>
 
     @auth
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <nav class="navbar navbar-expand-lg navbar-custom mb-4">
         <div class="container">
             <a class="navbar-brand" href="{{ route('dashboard') }}">دفترچه تلفن سازمانی</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
